@@ -44,7 +44,7 @@ GitHub Actions on every push and pull request to `main`:
 
 Dependabot opens weekly npm and monthly Actions PRs.
 
-To go live without Actions secrets, import this repository in [Vercel](https://vercel.com) and let their Git integration deploy `main`. Set `AVIATIONSTACK_ACCESS_KEY` there as a **server** env var if you want filed city-pairs.
+To go live without Actions secrets, import this repository in [Vercel](https://vercel.com) and let their Git integration deploy `main`. Nitro is already set to the `vercel` preset (Node 22, 60s function budget). Confirm the framework preset is **TanStack Start**. Set `AVIATIONSTACK_ACCESS_KEY` there as a **server** env var if you want filed city-pairs.
 
 ## Data
 

@@ -175,6 +175,20 @@ export default defineConfig(({ command, isPreview }) => ({
             // manifest + head-tag middleware). Nitro v3 defaults serverDir to
             // false, so removing this silently unwires /?install=1 on deploys.
             serverDir: "./server",
+            vercel: {
+              functions: {
+                runtime: "nodejs22.x",
+                // ADS-B + optional Aviationstack fan-out. Fluid Hobby cap is 300s.
+                maxDuration: 60,
+              },
+            },
+            routeRules: {
+              "/geo/**": {
+                headers: {
+                  "cache-control": "public, max-age=86400, stale-while-revalidate=604800",
+                },
+              },
+            },
           }),
         ]
       : []),
