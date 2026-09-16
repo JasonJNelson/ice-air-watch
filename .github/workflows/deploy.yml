@@ -3,8 +3,9 @@
 #   VERCEL_TOKEN
 #   VERCEL_ORG_ID
 #   VERCEL_PROJECT_ID
-# The job is skipped until those secrets exist. Alternatively, import this
-# repo in the Vercel dashboard — that Git integration deploys main on its own.
+# Until those exist this workflow stays green and skips the deploy job.
+# Alternatively, import this repo in the Vercel dashboard — that Git
+# integration deploys main on its own.
 
 name: deploy
 
@@ -22,8 +23,29 @@ permissions:
   deployments: write
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - id: check
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+            echo "Vercel secrets present — will deploy."
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "Vercel secrets not set — skipping production deploy."
+          fi
+
   vercel:
-    if: ${{ secrets.VERCEL_TOKEN != '' && secrets.VERCEL_ORG_ID != '' && secrets.VERCEL_PROJECT_ID != '' }}
+    needs: gate
+    if: needs.gate.outputs.ready == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
