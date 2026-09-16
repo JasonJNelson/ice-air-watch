@@ -1,0 +1,34 @@
+name: security
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+  schedule:
+    - cron: "17 8 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - name: Secret, sink, and CORS scan
+        run: npm run security -- --no-audit
+      - name: Production npm audit (high+)
+        run: npm audit --omit=dev --audit-level=high
+      - name: Scanner unit tests
+        run: node --test scripts/security-scan.test.mjs

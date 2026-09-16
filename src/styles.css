@@ -1,0 +1,293 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --font-sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Instrument Serif", "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+
+  --color-bg: #090a0c;
+  --color-surface: #12141a;
+  --color-surface-2: #1a1d24;
+  --color-fg: #ece8e1;
+  --color-muted: #9a958c;
+  --color-subtle: #6e6a64;
+  --color-border: #2a2c32;
+  --color-accent: #ece8e1;
+  --color-accent-fg: #090a0c;
+  --color-removal: #c45c4a;
+  --color-transfer: #7a8ea3;
+  --color-live: #8aa37a;
+  --color-ground: #6b7178;
+  --color-lost: #4a4e52;
+
+  --text-2xs: 0.625rem;
+  --text-micro: 0.6875rem;
+
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+
+  --shadow-panel: 0 16px 48px rgba(0, 0, 0, 0.5);
+
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+  --motion-slow: 400ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html,
+  body,
+  #app {
+    height: 100%;
+    background: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    font-feature-settings: "ss01" 1, "tnum" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  h1,
+  h2,
+  .font-display {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-fg) 22%, transparent);
+  }
+}
+
+.leaflet-container {
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  color: var(--color-fg);
+  z-index: 0 !important;
+}
+
+.map-stage .leaflet-interactive {
+  cursor: pointer;
+}
+
+.leaflet-control-attribution {
+  background: color-mix(in oklab, var(--color-bg) 78%, transparent) !important;
+  color: var(--color-subtle) !important;
+  font-size: 10px !important;
+  max-width: min(70vw, 28rem);
+}
+
+.leaflet-control-attribution a {
+  color: var(--color-muted) !important;
+}
+
+.plane-marker,
+.hub-marker {
+  background: none !important;
+  border: none !important;
+}
+
+.plane-stack {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 72px;
+}
+
+.plane-glyph {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.7));
+}
+
+.plane-glyph.stale {
+  opacity: 0.82;
+}
+
+.plane-glyph.lost {
+  opacity: 0.55;
+}
+
+.plane-glyph svg {
+  width: 22px;
+  height: 22px;
+  filter: drop-shadow(0 0 2px var(--color-bg)) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.8));
+}
+
+.plane-stack.is-world .plane-glyph svg {
+  width: 30px;
+  height: 30px;
+}
+
+.plane-stack.is-world .plane-glyph {
+  width: 36px;
+  height: 36px;
+}
+
+.plane-glyph.is-selected svg {
+  width: 26px;
+  height: 26px;
+}
+
+.plane-label {
+  margin-top: 2px;
+  max-width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: color-mix(in oklab, var(--color-bg) 82%, transparent);
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  color: var(--color-fg);
+}
+
+.hub-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xs);
+  background: color-mix(in oklab, var(--color-surface) 88%, transparent);
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.35);
+}
+
+.hub-mark.is-live {
+  border-color: color-mix(in oklab, var(--color-live) 45%, var(--color-border));
+  background: color-mix(in oklab, var(--color-live) 16%, var(--color-surface));
+  color: var(--color-fg);
+}
+
+.pulse-ring {
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  opacity: 0.55;
+  animation: ping-ring 2.4s ease-out infinite;
+}
+
+@keyframes ping-ring {
+  0% {
+    transform: scale(0.65);
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-ring {
+    animation: none;
+    opacity: 0.3;
+  }
+}
+
+.hub-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in oklab, var(--color-fg) 50%, transparent);
+  background: color-mix(in oklab, var(--color-surface) 80%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-bg) 45%, transparent);
+}
+
+.hub-dot.is-live {
+  background: color-mix(in oklab, var(--color-live) 70%, var(--color-fg));
+  border-color: var(--color-live);
+}
+
+.route-tooltip {
+  background: var(--color-surface) !important;
+  color: var(--color-fg) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 4px 8px !important;
+}
+
+.route-tooltip::before {
+  display: none !important;
+}
+
+.map-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  isolation: isolate;
+}
+
+.map-vignette {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(120% 80% at 50% 45%, transparent 42%, color-mix(in oklab, var(--color-bg) 42%, transparent) 100%),
+    linear-gradient(180deg, color-mix(in oklab, var(--color-bg) 22%, transparent), transparent 16%, transparent 80%, color-mix(in oklab, var(--color-bg) 38%, transparent));
+}
+
+.hud-card {
+  border: 1px solid color-mix(in oklab, var(--color-fg) 12%, transparent);
+  border-radius: var(--radius-lg);
+  background: color-mix(in oklab, var(--color-surface) 64%, transparent);
+  box-shadow: var(--shadow-panel);
+  backdrop-filter: blur(16px) saturate(1.15);
+}
+
+.ticker-track {
+  scrollbar-width: none;
+}
+
+.ticker-track::-webkit-scrollbar {
+  display: none;
+}
+
+.country-tooltip {
+  background: color-mix(in oklab, var(--color-surface) 82%, transparent) !important;
+  color: var(--color-fg) !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-sm) !important;
+  box-shadow: none !important;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 8px !important;
+}
+
+.country-tooltip::before {
+  display: none !important;
+}
